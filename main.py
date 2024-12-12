@@ -1,19 +1,17 @@
 import pygame
 import sys
-
-# Initialize Pygame
-pygame.init()
-
-# Import constants after initializing Pygame
 from utils.constants import *
+from utils.game_table import GameTable  # Import the GameTable class
+
+pygame.init()
 
 # Screen settings
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Hive Game")
 
 # Load logo image
-logo_image = pygame.image.load("assets/logo.png")  # Update with your logo path
-logo_image = pygame.transform.scale(logo_image, (450, 450))  # Scale the image if needed
+logo_image = pygame.image.load("assets/logo.png")
+logo_image = pygame.transform.scale(logo_image, (450, 450))
 
 # Button settings
 button_font = pygame.font.Font(None, 36)
@@ -29,6 +27,7 @@ running = True
 show_dialog = False
 show_rules_screen = False
 show_options_screen = False
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -86,20 +85,20 @@ while running:
                         show_options_screen = False
                     for i, (button_rect, option_text) in enumerate(option_buttons):
                         if button_rect.collidepoint(event.pos):
-                            print(f"Option {i + 1} selected: {option_text}")  # Replace with actual game logic
+                            print(f"Option {i + 1} selected: {option_text}")  # Debug log
+                            # Open the game table based on selected option
+                            game_mode = option_text
+                            game_table = GameTable(screen)  # Pass the screen to GameTable
+                            game_mode_result = game_table.run()  # Run the game table loop
+
+                            # Handle returning from the game table (if needed)
+                            if game_mode_result == "main_menu":
+                                show_options_screen = False
     else:
         # Draw buttons and check for hover effects
-        start_button = draw_button(screen, "Start",
-                                   50, HEIGHT // 2 - button_height - button_spacing - 10,
-                                   False, button_font)   # Initially not hovered
-
-        rules_button = draw_button(screen, "Rules",
-                                   50, HEIGHT // 2 + 10,
-                                   False, button_font)   # Initially not hovered
-
-        exit_button = draw_button(screen, "Exit",
-                                  50, HEIGHT // 2 + button_height + button_spacing + 30,
-                                  False, button_font)   # Initially not hovered
+        start_button = draw_button(screen, "Start", 50, HEIGHT // 2 - button_height - button_spacing - 10, False, button_font)
+        rules_button = draw_button(screen, "Rules", 50, HEIGHT // 2 + 10, False, button_font)
+        exit_button = draw_button(screen, "Exit", 50, HEIGHT // 2 + button_height + button_spacing + 30, False, button_font)
 
         # Check hover states after drawing buttons
         start_hovered = start_button.collidepoint(mouse_pos)
@@ -107,21 +106,12 @@ while running:
         exit_hovered = exit_button.collidepoint(mouse_pos)
 
         # Update buttons with hover state
-        start_button = draw_button(screen, "Start",
-                                   50, HEIGHT // 2 - button_height - button_spacing - 10,
-                                   start_hovered, button_font)
-
-        rules_button = draw_button(screen, "Rules",
-                                   50, HEIGHT // 2 + 10,
-                                   rules_hovered, button_font)
-
-        exit_button = draw_button(screen, "Exit",
-                                  50, HEIGHT // 2 + button_height + button_spacing + 30,
-                                  exit_hovered, button_font)
+        start_button = draw_button(screen, "Start", 50, HEIGHT // 2 - button_height - button_spacing - 10, start_hovered, button_font)
+        rules_button = draw_button(screen, "Rules", 50, HEIGHT // 2 + 10, rules_hovered, button_font)
+        exit_button = draw_button(screen, "Exit", 50, HEIGHT // 2 + button_height + button_spacing + 30, exit_hovered, button_font)
 
         # Draw logo image on the right side of the screen
-        screen.blit(logo_image, (WIDTH - logo_image.get_width() - 20,
-                                  (HEIGHT - logo_image.get_height()) // 2))
+        screen.blit(logo_image, (WIDTH - logo_image.get_width() - 20, (HEIGHT - logo_image.get_height()) // 2))
 
         # Check for button clicks
         for event in pygame.event.get():
