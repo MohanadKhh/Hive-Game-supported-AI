@@ -211,7 +211,3 @@ class HexBoard:
     def move(self, hex, new_hex,valid_moves):
         piece = self.get_piece(hex)
         piece.move(hex, new_hex, self,valid_moves)
-    
-
-    app = HexagonalBoardGUI(board)
-    app.mainloop()
