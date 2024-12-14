@@ -1,4 +1,4 @@
-from hive import Piece, HexUtils, Hex
+from environment.hive import Piece, HexUtils, Hex
 
 class Ant(Piece):
     def __init__(self, color):
