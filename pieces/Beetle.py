@@ -70,33 +70,6 @@ class Beetle(Piece) :
             # board.board[(hex.q, hex.r)] = None
             self.move2(hex, new_hex, board,valid_moves)
 
-    # def move(self, current_hex, direction, board):
-    #     dir_offset = HexUtils.get_direction(direction)
-    #     target_hex = Hex(current_hex.q + dir_offset[0], current_hex.r + dir_offset[1])
-
-    #     for hex in self.get_valid_moves(current_hex, board):
-    #         if hex.r==target_hex.r and hex.q==target_hex.q :
-    #             if board.board[(target_hex.q, target_hex.r)] == None:
-    #                 board.board[(target_hex.q, target_hex.r)] = self
-    #                 if self.frozenPiece == None:
-    #                     board.board[(current_hex.q, current_hex.r)] = None
-    #                 else : 
-    #                     board.board[(current_hex.q, current_hex.r)] = self.frozenPiece 
-    #                     self.frozenPiece = None
-
-    #             else :
-    #                 if self.frozenPiece == None:
-    #                     board.board[(current_hex.q, current_hex.r)] = None
-    #                 else : 
-    #                     board.board[(current_hex.q, current_hex.r)] = self.frozenPiece 
-    #                     self.frozenPiece = None
-    #                 self.frozenPiece = board.board[(target_hex.q, target_hex.r)]
-    #                 board.board[(target_hex.q, target_hex.r)] = self
-                    
-    #             break
-    #         else:
-    #             continue
-
 
     def move2(self, current_hex, target_hex, board,valid_move):
             # dir_offset = HexUtils.get_direction(direction)
@@ -124,12 +97,3 @@ class Beetle(Piece) :
                     break
                 else:
                     continue
-
-
-
-
-
-
-
-
-
