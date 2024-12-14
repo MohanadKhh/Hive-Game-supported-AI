@@ -10,8 +10,16 @@ class Hex:
         self.r = r
         self.s = -q - r
 
+    def __hash__(self):
+        return hash((self.q, self.r))
+
     def __repr__(self):
         return f"Hex({self.q}, {self.r}, {self.s})"
+
+    def __eq__(self, other):
+        if isinstance(other, Hex):
+            return self.q == other.q and self.r == other.r and self.s == other.s
+        return False
     
 
 class HexUtils:
