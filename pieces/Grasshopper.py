@@ -1,5 +1,5 @@
-
-from hive import Piece , HexUtils , Hex 
+from environment.hive import Piece, HexUtils, Hex
+ 
 class Grasshopper(Piece):
     def __init__(self,color):
         super().__init__('Grasshopper',color)
