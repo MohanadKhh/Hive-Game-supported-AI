@@ -19,7 +19,7 @@ class Beetle(Piece) :
                 # Create a copy of the board
                 board_copy = board.board.copy()
 
-                # Temporarily move the Queen Bee to the new position
+                # Temporarily move the Beetle to the new position
                 board_copy[(hex.q, hex.r)] = None
                 #board_copy[(new_hex.q, new_hex.r)] = self
 
