@@ -1,3 +1,4 @@
+#Hive file
 import math
 
 class Hex:
@@ -6,6 +7,9 @@ class Hex:
         self.q = q
         self.r = r
         self.s = -q - r
+
+    def __add__(self, other):
+        return Hex(self.q + other.q, self.r + other.r)
 
     def __hash__(self):
         return hash((self.q, self.r))
@@ -19,6 +23,11 @@ class Hex:
         return False
     
 class HexUtils:
+    DIRECTIONS = [
+        Hex(1, 0), Hex(1, -1), Hex(0, -1),
+        Hex(-1, 0), Hex(-1, 1), Hex(0, 1)
+    ]
+
     directions = {
         'N': (0, -1),    # North
         'NW': (-1, 0),   # North-West
@@ -185,7 +194,7 @@ class Piece:
     def move(self, hex, direction, board):
         """Basic movement method, should be overridden by specific piece types."""
         raise NotImplementedError("This method should be implemented by specific pieces.")
-    
+
 class HexBoard:
     def __init__(self, grid_size=50):
         self.grid_size = grid_size
@@ -229,12 +238,13 @@ class HexBoard:
     def place_piece(self, hex, piece):
         if (hex.q, hex.r) in self.board:
             self.board[(hex.q, hex.r)] = piece
+            piece.set_position(hex.q, hex.r)  # Set the position of the piece
         else:
             raise ValueError("Hex not on the board.")
 
     def get_piece(self, hex):
         return self.board.get((hex.q, hex.r))
-        
+
     def move(self, hex, new_hex,board,valid_moves):
         piece = self.get_piece(hex)
         piece.move(hex, new_hex, self,valid_moves)

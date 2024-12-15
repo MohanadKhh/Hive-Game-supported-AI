@@ -1,12 +1,15 @@
-from environment.hive import Piece, HexUtils, Hex 
-
-
+#Pieces_Queen File
+from environment.hive import Piece, HexUtils, Hex
 class QueenBee(Piece):
     def __init__(self,color):
         super().__init__('Queen Bee',color)
+        #.......
+        self.position = None  # Add position attribute
+
+    def set_position(self, q, r):
+        self.position = Hex(q, r)
 
 
-           
     def get_valid_moves(self, hex, board):
     
         valid_moves = []

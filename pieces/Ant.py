@@ -1,9 +1,11 @@
+#Pieces_Ant File
 from environment.hive import Piece, HexUtils, Hex
-
 class Ant(Piece):
     def __init__(self, color):
         super().__init__('Ant' ,color)
-
+        self.position = None  # Add position attribute
+    def set_position(self, q, r):
+        self.position = Hex(q, r)
     def get_valid_moves(self, current_position, board):
         if not HexUtils.is_valid_after_move(current_position, board):
             return []

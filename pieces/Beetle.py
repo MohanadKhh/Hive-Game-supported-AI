@@ -1,11 +1,12 @@
-from environment.hive import Piece, HexUtils, Hex 
-
-
+#Pieces_Beetle File
+from environment.hive import Piece, HexUtils, Hex
 class Beetle(Piece) :
     frozenPiece = None
     def __init__(self,color):
         super().__init__('Beetle',color)
-
+        self.position = None  # Add position attribute
+    def set_position(self, q, r):
+        self.position = Hex(q, r)
     def get_valid_moves(self, hex, board):
         valid_moves = []
 
@@ -14,13 +15,13 @@ class Beetle(Piece) :
 
             # Check if the new_hex is within the board and unoccupied
             if (new_hex.q, new_hex.r) in board.board :
-                
+
                 # Create a copy of the board
                 board_copy = board.board.copy()
 
                 # Temporarily move the Queen Bee to the new position
                 board_copy[(hex.q, hex.r)] = None
-                board_copy[(new_hex.q, new_hex.r)] = self
+                #board_copy[(new_hex.q, new_hex.r)] = self
 
                 # Check if any of the neighboring hexes around the new position are occupied
                 neighbors = [
@@ -62,8 +63,8 @@ class Beetle(Piece) :
 
         return valid_moves
 
-    
-    
+
+
     def move(self, hex, new_hex, board,valid_moves):
         if new_hex in valid_moves:
             # board.board[(new_hex.q, new_hex.r)] = self
@@ -81,19 +82,19 @@ class Beetle(Piece) :
                         board.board[(target_hex.q, target_hex.r)] = self
                         if self.frozenPiece == None:
                             board.board[(current_hex.q, current_hex.r)] = None
-                        else : 
-                            board.board[(current_hex.q, current_hex.r)] = self.frozenPiece 
+                        else :
+                            board.board[(current_hex.q, current_hex.r)] = self.frozenPiece
                             self.frozenPiece = None
 
                     else :
                         if self.frozenPiece == None:
                             board.board[(current_hex.q, current_hex.r)] = None
-                        else : 
-                            board.board[(current_hex.q, current_hex.r)] = self.frozenPiece 
+                        else :
+                            board.board[(current_hex.q, current_hex.r)] = self.frozenPiece
                             self.frozenPiece = None
                         self.frozenPiece = board.board[(target_hex.q, target_hex.r)]
                         board.board[(target_hex.q, target_hex.r)] = self
-                        
+
                     break
                 else:
                     continue

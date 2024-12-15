@@ -1,9 +1,11 @@
+#Pieces_Grasshopper File
 from environment.hive import Piece, HexUtils, Hex
- 
 class Grasshopper(Piece):
     def __init__(self,color):
         super().__init__('Grasshopper',color)
-
+        self.position = None  # Add position attribute
+    def set_position(self, q, r):
+        self.position = Hex(q, r)
     def get_valid_moves(self, hex, board):
         valid_moves=[]
         if HexUtils.is_valid_after_move(hex, board):

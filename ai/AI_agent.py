@@ -1,11 +1,11 @@
+#AI_agent(part 1)
 import copy
-
 from environment.hive import Piece, HexBoard, Hex, HexUtils
-from pieces.ant import Ant
-from pieces.beetle import Beetle
-from pieces.queenBee import QueenBee
-from pieces.grasshopper import Grasshopper
-from pieces.spider import Spider
+from pieces import Ant
+from pieces import Beetle
+from pieces import QueenBee
+from pieces import Grasshopper
+from pieces import Spider
 
 
 def evaluate_board(board, player):
@@ -203,6 +203,8 @@ def alpha_beta(board, player, depth, alpha, beta, is_maximizing_player):
                 break
         return min_eval
 
+
+#AI_agent(part 2)
 
 def alpha_beta_iterative_deepening(board, player, max_depth, time_limit=5):
     import time

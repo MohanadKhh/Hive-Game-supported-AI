@@ -88,7 +88,7 @@ while running:
                             print(f"Option {i + 1} selected: {option_text}")  # Debug log
                             # Open the game table based on selected option
                             game_mode = option_text
-                            game_table = GameTable(screen)  # Pass the screen to GameTable
+                            game_table = GameTable(screen, game_mode)  # Pass the screen and game mode to GameTable
                             game_mode_result = game_table.run()  # Run the game table loop
 
                             # Handle returning from the game table (if needed)
