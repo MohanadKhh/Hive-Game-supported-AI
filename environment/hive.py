@@ -63,7 +63,7 @@ class HexUtils:
 
         # Start flood-fill from the first piece
         def flood_fill(hex):
-            if hex in visited or board.board[hex] is None:
+            if hex in visited or (board.board[hex] is None):
                 return
             visited.add(hex)
             for direction in HexUtils.directions.values():
@@ -92,9 +92,10 @@ class HexUtils:
     
 class Piece:
     """Base class for pieces on the hexagonal board."""
-    def __init__(self, name,color):
+    def __init__(self, name,color,value=5):
         self.name = name
-        self.color=color
+        self.color=color #0 for white 1 for black
+        self.value = value
     
     def get_valid_moves(self, hex, board):
         raise NotImplementedError("")
@@ -181,7 +182,7 @@ class Piece:
 
                
     
-    def move(self, hex, direction, board,valid_moves):
+    def move(self, hex, direction, board):
         """Basic movement method, should be overridden by specific piece types."""
         raise NotImplementedError("This method should be implemented by specific pieces.")
     
@@ -189,6 +190,32 @@ class HexBoard:
     def __init__(self, grid_size=50):
         self.grid_size = grid_size
         self.board = self.create_board()
+        # print("DEBUG: HexBoard initialized with board:", self.board)
+
+    # def validate_board(self):
+    #     if self.board is None:
+    #         raise ValueError("board.board is None! Something went wrong.")
+
+    def display(self):
+        """
+        Display the board in a readable hexagonal format.
+        Empty hexes are represented by ".", and filled hexes display the piece's representation.
+        """
+        min_q = min(q for q, r in self.board)
+        max_q = max(q for q, r in self.board)
+        min_r = min(r for q, r in self.board)
+        max_r = max(r for q, r in self.board)
+
+        for r in range(min_r, max_r + 1):
+            row = " " * (r - min_r)  # Indentation for hexagonal format
+            for q in range(min_q, max_q + 1):
+                s = -q - r
+                if (q, r) in self.board and abs(s) < self.grid_size:
+                    piece = self.board[(q, r)]
+                    row += (str(piece) if piece else ".") + " "
+                else:
+                    row += "  "  # Empty spaces for alignment
+            print(row)
 
     def create_board(self):
         board = {}
@@ -208,6 +235,7 @@ class HexBoard:
     def get_piece(self, hex):
         return self.board.get((hex.q, hex.r))
         
-    def move(self, hex, new_hex,valid_moves):
+    def move(self, hex, new_hex,board,valid_moves):
         piece = self.get_piece(hex)
         piece.move(hex, new_hex, self,valid_moves)
+        return self
