@@ -6,7 +6,6 @@ from pieces.Grasshopper import Grasshopper
 from pieces.Beetle import Beetle
 from pieces.Spider import Spider
 from pieces.Ant import Ant
-from ai.AI_agent import agent_best_next_move, alpha_beta_iterative_deepening  # Import AI functions
 
 class GameTable:
     def __init__(self, screen, game_mode):
@@ -25,6 +24,7 @@ class GameTable:
         self.white_queen_played = False
         self.black_queen_played = False
         self.show_queen_warning = False
+        self.flag = False
 
     def init_pieces(self):
         # Initialize player decks with pieces
@@ -196,6 +196,7 @@ class GameTable:
             self.selected_valid_moves = []
             self.current_player = 1 - self.current_player  # Switch player
 
+
     def is_piece_surrounded(self, piece):
         hex_coords = [(piece.position.q, piece.position.r)]
         for direction in HexUtils.DIRECTIONS:
@@ -227,7 +228,13 @@ class GameTable:
                         if self.selected_piece:
                             if clicked_hex in self.selected_valid_moves:
                                 if self.selected_hex:
-                                    self.board.board[(self.selected_hex.q, self.selected_hex.r)] = None
+                                    if isinstance(self.selected_piece, Beetle):
+                                        self.board.board[(
+                                        self.selected_hex.q, self.selected_hex.r)] = self.selected_piece.frozenPiece
+                                        self.selected_piece.move2(self.selected_hex, clicked_hex, self.board,
+                                                                  self.selected_valid_moves)
+                                    else:
+                                        self.board.board[(self.selected_hex.q, self.selected_hex.r)] = None
                                 self.board.place_piece(clicked_hex, self.selected_piece)
                                 if isinstance(self.selected_piece, QueenBee):
                                     if self.current_player == 0:
@@ -235,12 +242,14 @@ class GameTable:
                                     else:
                                         self.black_queen_played = True
                                 # Validate and remove the piece from the player's deck only after placing it on the board
-                                if self.selected_piece_origin == 'black' and 0 <= self.selected_piece_index < len(
-                                        self.black_pieces):
-                                    self.black_pieces.pop(self.selected_piece_index)
-                                elif self.selected_piece_origin == 'white' and 0 <= self.selected_piece_index < len(
-                                        self.white_pieces):
-                                    self.white_pieces.pop(self.selected_piece_index)
+                                if self.flag:
+                                    self.flag = False
+                                    if self.selected_piece_origin == 'black' and 0 <= self.selected_piece_index < len(
+                                            self.black_pieces):
+                                        self.black_pieces.pop(self.selected_piece_index)
+                                    elif self.selected_piece_origin == 'white' and 0 <= self.selected_piece_index < len(
+                                            self.white_pieces):
+                                        self.white_pieces.pop(self.selected_piece_index)
                                 self.selected_piece = None
                                 self.selected_valid_moves = []
                                 if self.current_player == 0:
@@ -275,8 +284,10 @@ class GameTable:
                                 self.selected_hex = clicked_hex
                                 self.selected_piece = piece
                                 self.selected_valid_moves = piece.get_valid_moves(clicked_hex, self.board)
+                                self.flag = False
                             else:
                                 self.handle_piece_selection(event.pos)
+                                self.flag = True
                                 if self.selected_piece:
                                     if not self.check_queen_played():
                                         if self.selected_piece.name != "Queen Bee":
@@ -287,6 +298,7 @@ class GameTable:
                                                 self.board)
                                     else:
                                         self.selected_valid_moves = self.selected_piece.get_valid_position(self.board)
+
 
             if self.game_mode == "Player VS Computer" and self.current_player == 1:
                 if not self.black_queen_played and self.black_rounds == 3:

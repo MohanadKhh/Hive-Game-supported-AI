@@ -76,7 +76,9 @@ while running:
         back_button = draw_button(screen, "Back", back_button.x, back_button.y, back_hovered, button_font)
 
         difficulty_hovered = [button[0].collidepoint(mouse_pos) for button in difficulty_buttons]
-        difficulty_buttons = [(draw_button(screen, button[1], button[0].x, button[0].y, difficulty_hovered[i], button_font), button[1]) for i, button in enumerate(difficulty_buttons)]
+        difficulty_buttons = [
+            (draw_button(screen, button[1], button[0].x, button[0].y, difficulty_hovered[i], button_font), button[1])
+            for i, button in enumerate(difficulty_buttons)]
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -93,11 +95,13 @@ while running:
                             show_difficulty_screen = False
                             game_mode = "Player VS Computer"
                             game_table = GameTable(screen, game_mode)
-                            game_table.ai_depth = {"Easy": 1, "Medium": 3, "Hard": 5}[selected_difficulty]  # Adjust AI depth
+                            game_table.ai_depth = {"Easy": 1, "Medium": 3, "Hard": 5}[
+                                selected_difficulty]  # Adjust AI depth
                             game_mode_result = game_table.run()
 
                             if game_mode_result == "main_menu":
                                 show_options_screen = False
+
 
     elif show_options_screen:
         option_buttons, back_button = show_game_options(screen, button_font)
