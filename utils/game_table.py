@@ -67,6 +67,22 @@ class GameTable:
         text_rect = text_surface.get_rect(center=(x, y))
         self.screen.blit(text_surface, text_rect)
 
+    def draw_turn_text(self):
+        font = pygame.font.Font(None, 36)
+        text_color = (255, 0, 0)  # Red color for the turn text
+        screen_width, screen_height = self.screen.get_size()
+
+        if self.current_player == 0:  # White's turn
+            turn_text = "White turn now!"
+            text_surface = font.render(turn_text, True, text_color)
+            text_rect = text_surface.get_rect(center=(screen_width - 100, 450))  # Adjust position if necessary
+            self.screen.blit(text_surface, text_rect)
+        else:  # Black's turn
+            turn_text = "Black turn now!"
+            text_surface = font.render(turn_text, True, text_color)
+            text_rect = text_surface.get_rect(center=(100, 450))  # Adjust position if necessary
+            self.screen.blit(text_surface, text_rect)
+
     def draw_board(self):
         screen_width, screen_height = self.screen.get_size()
 
@@ -104,6 +120,9 @@ class GameTable:
                 x = offset_x + hex_size * (3 / 2 * q)
                 y = offset_y + hex_size * (math.sqrt(3) * (r + q / 2))
                 self.draw_piece(x, y, piece)
+
+        # Draw the turn text
+        self.draw_turn_text()
 
     def handle_piece_selection(self, pos):
         screen_width = self.screen.get_width()

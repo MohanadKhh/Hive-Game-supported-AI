@@ -21,12 +21,14 @@ from utils.draw_button import draw_button
 from utils.show_exit_dialog import show_exit_dialog
 from utils.show_rules import show_rules
 from utils.show_game_options import show_game_options
+from utils.show_difficulty_options import show_difficulty_options
 
 # Main loop
 running = True
 show_dialog = False
 show_rules_screen = False
 show_options_screen = False
+show_difficulty_screen = False
 
 while running:
     for event in pygame.event.get():
@@ -68,6 +70,35 @@ while running:
                 if event.button == 1:  # Left mouse button clicked
                     if back_button.collidepoint(event.pos):
                         show_rules_screen = False
+    elif show_difficulty_screen:
+        difficulty_buttons, back_button = show_difficulty_options(screen, button_font)
+        back_hovered = back_button.collidepoint(mouse_pos)
+        back_button = draw_button(screen, "Back", back_button.x, back_button.y, back_hovered, button_font)
+
+        difficulty_hovered = [button[0].collidepoint(mouse_pos) for button in difficulty_buttons]
+        difficulty_buttons = [(draw_button(screen, button[1], button[0].x, button[0].y, difficulty_hovered[i], button_font), button[1]) for i, button in enumerate(difficulty_buttons)]
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Left mouse button clicked
+                    if back_button.collidepoint(event.pos):
+                        show_difficulty_screen = False
+                    for i, (button_rect, difficulty_text) in enumerate(difficulty_buttons):
+                        if button_rect.collidepoint(event.pos):
+                            print(f"Difficulty selected: {difficulty_text}")  # Debug log
+                            # Store the selected difficulty for use in the game table
+                            selected_difficulty = difficulty_text
+                            show_difficulty_screen = False
+                            game_mode = "Player VS Computer"
+                            game_table = GameTable(screen, game_mode)
+                            game_table.ai_depth = {"Easy": 1, "Medium": 3, "Hard": 5}[selected_difficulty]  # Adjust AI depth
+                            game_mode_result = game_table.run()
+
+                            if game_mode_result == "main_menu":
+                                show_options_screen = False
+
     elif show_options_screen:
         option_buttons, back_button = show_game_options(screen, button_font)
         back_hovered = back_button.collidepoint(mouse_pos)
@@ -86,34 +117,30 @@ while running:
                     for i, (button_rect, option_text) in enumerate(option_buttons):
                         if button_rect.collidepoint(event.pos):
                             print(f"Option {i + 1} selected: {option_text}")  # Debug log
-                            # Open the game table based on selected option
-                            game_mode = option_text
-                            game_table = GameTable(screen, game_mode)  # Pass the screen and game mode to GameTable
-                            game_mode_result = game_table.run()  # Run the game table loop
+                            if option_text == "Player VS Computer":
+                                show_difficulty_screen = True
+                            else:
+                                game_mode = option_text
+                                game_table = GameTable(screen, game_mode)
+                                game_mode_result = game_table.run()
 
-                            # Handle returning from the game table (if needed)
-                            if game_mode_result == "main_menu":
-                                show_options_screen = False
+                                if game_mode_result == "main_menu":
+                                    show_options_screen = False
     else:
-        # Draw buttons and check for hover effects
         start_button = draw_button(screen, "Start", 50, HEIGHT // 2 - button_height - button_spacing - 10, False, button_font)
         rules_button = draw_button(screen, "Rules", 50, HEIGHT // 2 + 10, False, button_font)
         exit_button = draw_button(screen, "Exit", 50, HEIGHT // 2 + button_height + button_spacing + 30, False, button_font)
 
-        # Check hover states after drawing buttons
         start_hovered = start_button.collidepoint(mouse_pos)
         rules_hovered = rules_button.collidepoint(mouse_pos)
         exit_hovered = exit_button.collidepoint(mouse_pos)
 
-        # Update buttons with hover state
         start_button = draw_button(screen, "Start", 50, HEIGHT // 2 - button_height - button_spacing - 10, start_hovered, button_font)
         rules_button = draw_button(screen, "Rules", 50, HEIGHT // 2 + 10, rules_hovered, button_font)
         exit_button = draw_button(screen, "Exit", 50, HEIGHT // 2 + button_height + button_spacing + 30, exit_hovered, button_font)
 
-        # Draw logo image on the right side of the screen
         screen.blit(logo_image, (WIDTH - logo_image.get_width() - 20, (HEIGHT - logo_image.get_height()) // 2))
 
-        # Check for button clicks
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -126,9 +153,7 @@ while running:
                     elif exit_button.collidepoint(event.pos):
                         show_dialog = True
 
-    # Update display
     pygame.display.flip()
 
-# Quit Pygame
 pygame.quit()
 sys.exit()
