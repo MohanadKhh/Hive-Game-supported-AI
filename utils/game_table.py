@@ -7,6 +7,9 @@ from pieces.Beetle import Beetle
 from pieces.Spider import Spider
 from pieces.Ant import Ant
 from ai.ai_test import alpha_beta_iterative_deepening
+from utils.draw_button import draw_button, draw_restart_button
+from utils.constants import *
+
 
 
 class GameTable:
@@ -27,6 +30,11 @@ class GameTable:
         self.black_queen_played = False
         self.show_queen_warning = False
         self.flag = False
+        self.load_images()  # Load images here
+
+
+    def restart_game(self):
+        self.__init__(self.screen, self.game_mode)
 
     def init_pieces(self):
         # Initialize player decks with pieces
@@ -45,6 +53,17 @@ class GameTable:
         ]
         pygame.draw.polygon(self.screen, color, points, 2)
 
+    def load_images(self):
+        self.images = {
+            "Queen Bee": pygame.image.load("assets/Bee.png"),
+            "Ant": pygame.image.load("assets/Ant.png"),
+            "Beetle": pygame.image.load("assets/Beetle.png"),
+            "Grasshopper": pygame.image.load("assets/Grasshopper.png"),
+            "Spider": pygame.image.load("assets/Spider.png")
+        }
+        for key in self.images:
+            self.images[key] = pygame.transform.scale(self.images[key], (40, 40))  # Adjust size if needed
+
     def draw_piece(self, x, y, piece, is_selected=False):
         hex_size = 40  # Use the same size as the hexagon cells
 
@@ -56,20 +75,20 @@ class GameTable:
             for angle in range(0, 360, 60)
         ]
 
-        # Change color to red if the piece is selected
-        if is_selected:
-            color = (255, 0, 0)
-        else:
-            color = (0, 0, 0) if piece.color == 1 else (255, 255, 255)
+        # Determine the fill color based on the piece's color
+        fill_color = (0, 0, 0) if piece.color == 1 else (255, 255, 255)
 
-        pygame.draw.polygon(self.screen, color, points)
+        # Change border color to red if the piece is selected
+        border_color = (255, 0, 0) if is_selected else (0, 0, 0)
 
-        piece_name = piece.name
-        font_size = 20  # Adjust font size if needed
-        text_color = (255, 255, 255) if color == (0, 0, 0) else (0, 0, 0)
-        text_surface = pygame.font.Font(None, font_size).render(piece_name, True, text_color)
-        text_rect = text_surface.get_rect(center=(x, y))
-        self.screen.blit(text_surface, text_rect)
+        # Draw the filled hexagon
+        pygame.draw.polygon(self.screen, fill_color, points)
+        pygame.draw.polygon(self.screen, border_color, points, 2)
+
+        # Blit the piece image on top
+        piece_image = self.images[piece.name]
+        image_rect = piece_image.get_rect(center=(x, y))
+        self.screen.blit(piece_image, image_rect)
 
     def draw_turn_text(self):
         font = pygame.font.Font(None, 36)
@@ -79,12 +98,12 @@ class GameTable:
         if self.current_player == 0:  # White's turn
             turn_text = "White turn now!"
             text_surface = font.render(turn_text, True, text_color)
-            text_rect = text_surface.get_rect(center=(screen_width - 100, 450))  # Adjust position if necessary
+            text_rect = text_surface.get_rect(center=(screen_width - 100, 600))  # Adjust position if necessary
             self.screen.blit(text_surface, text_rect)
         else:  # Black's turn
             turn_text = "Black turn now!"
             text_surface = font.render(turn_text, True, text_color)
-            text_rect = text_surface.get_rect(center=(100, 450))  # Adjust position if necessary
+            text_rect = text_surface.get_rect(center=(100, 600))  # Adjust position if necessary
             self.screen.blit(text_surface, text_rect)
 
     def draw_board(self):
@@ -106,8 +125,8 @@ class GameTable:
                     self.draw_hexagon(x, y, hex_size, (200, 200, 200))
 
         # Draw player decks with 2 columns
-        column_spacing = 60  # Adjust as needed
-        row_spacing = 60  # Adjust as needed
+        column_spacing = 85  # Adjust as needed
+        row_spacing = 85  # Adjust as needed
         for i, piece in enumerate(self.black_pieces):
             x = 50 + (i % 2) * column_spacing
             y = 100 + (i // 2) * row_spacing
@@ -130,22 +149,29 @@ class GameTable:
 
     def handle_piece_selection(self, pos):
         screen_width = self.screen.get_width()
+        hex_size = 40  # Use the same size as the hexagon cells
+
         for i, piece in enumerate(self.black_pieces):
-            if self.current_player == 1 and math.sqrt(
-                    (50 + (i % 2) * 60 - pos[0]) ** 2 + (100 + (i // 2) * 60 - pos[1]) ** 2) <= 20:
-                self.selected_piece = piece
-                self.selected_piece_index = i
-                self.selected_piece_origin = 'black'
-                self.selected_hex = None
-                return
+            if self.current_player == 1:
+                piece_x = 50 + (i % 2) * 85  # Ensure spacing matches with draw_board
+                piece_y = 100 + (i // 2) * 85
+                if math.sqrt((piece_x - pos[0]) ** 2 + (piece_y - pos[1]) ** 2) <= hex_size / 2:
+                    self.selected_piece = piece
+                    self.selected_piece_index = i
+                    self.selected_piece_origin = 'black'
+                    self.selected_hex = None
+                    return
+
         for i, piece in enumerate(self.white_pieces):
-            if self.current_player == 0 and math.sqrt(
-                    (screen_width - 100 - (i % 2) * 60 - pos[0]) ** 2 + (100 + (i // 2) * 60 - pos[1]) ** 2) <= 20:
-                self.selected_piece = piece
-                self.selected_piece_index = i
-                self.selected_piece_origin = 'white'
-                self.selected_hex = None
-                return
+            if self.current_player == 0:
+                piece_x = screen_width - 100 - (i % 2) * 85  # Ensure spacing matches with draw_board
+                piece_y = 100 + (i // 2) * 85
+                if math.sqrt((piece_x - pos[0]) ** 2 + (piece_y - pos[1]) ** 2) <= hex_size / 2:
+                    self.selected_piece = piece
+                    self.selected_piece_index = i
+                    self.selected_piece_origin = 'white'
+                    self.selected_hex = None
+                    return
 
     def highlight_moves(self, moves):
         offset_x = self.screen.get_width() / 2
@@ -235,6 +261,8 @@ class GameTable:
         return None
 
     def run(self):
+        button_font = pygame.font.Font(None, 36)
+        restart_button = draw_restart_button(self.screen, "Restart", False, button_font)
         while self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -242,83 +270,86 @@ class GameTable:
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     self.running = False
                     return "main_menu"
-                elif event.type == pygame.MOUSEBUTTONDOWN: #mousebuttondown (capital letters)
+                elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
-                        clicked_hex = HexUtils.pixel_to_hex(event.pos[0] - self.screen.get_width() / 2,
-                                                            event.pos[1] - self.screen.get_height() / 2, 40)
-                        if self.selected_piece:
-                            if clicked_hex in self.selected_valid_moves:
-                                if self.selected_hex:
-                                    if isinstance(self.selected_piece, Beetle):
-                                        self.board.board[(
-                                            self.selected_hex.q, self.selected_hex.r)] = self.selected_piece.frozenPiece
-                                        self.selected_piece.move2(self.selected_hex, clicked_hex, self.board,
-                                                                  self.selected_valid_moves)
-                                    else:
-                                        self.board.board[(self.selected_hex.q, self.selected_hex.r)] = None
-                                self.board.place_piece(clicked_hex, self.selected_piece)
-                                if isinstance(self.selected_piece, QueenBee):
-                                    if self.current_player == 0:
-                                        self.white_queen_played = True
-                                    else:
-                                        self.black_queen_played = True
-                                # Validate and remove the piece from the player's deck only after placing it on the board
-                                if self.flag:
-                                    self.flag = False
-                                    if self.selected_piece_origin == 'black' and 0 <= self.selected_piece_index < len(
-                                            self.black_pieces):
-                                        self.black_pieces.pop(self.selected_piece_index)
-                                    elif self.selected_piece_origin == 'white' and 0 <= self.selected_piece_index < len(
-                                            self.white_pieces):
-                                        self.white_pieces.pop(self.selected_piece_index)
-                                self.selected_piece = None
-                                self.selected_valid_moves = []
-                                if self.current_player == 0:
-                                    self.white_rounds += 1
-                                else:
-                                    self.black_rounds += 1
-
-                                # Check for win condition
-                                white_queen = self.get_queen_bee(0)
-                                black_queen = self.get_queen_bee(1)
-                                if white_queen and self.is_piece_surrounded(white_queen):
-                                    self.show_message_box("Black wins!")
-                                    self.running = False
-                                elif black_queen and self.is_piece_surrounded(black_queen):
-                                    self.show_message_box("White wins!")
-                                    self.running = False
-
-                                self.current_player = 1 - self.current_player  # Switch player
-                            else:
-                                self.selected_piece = None
-                                self.selected_valid_moves = []
+                        mouse_pos = event.pos
+                        if restart_button.collidepoint(mouse_pos):
+                            self.restart_game()
                         else:
-                            piece = self.board.get_piece(clicked_hex)
-                            if piece and piece.color == self.current_player:
-                                # Check if Queen Bee is placed before allowing to move any piece
-                                if (self.current_player == 0 and not self.white_queen_played) or (
-                                        self.current_player == 1 and not self.black_queen_played):
-                                    if not isinstance(piece, QueenBee):
-                                        self.show_message_box(
-                                            "You must place the Queen Bee before moving any other piece.")
-                                        continue
-                                self.selected_hex = clicked_hex
-                                self.selected_piece = piece
-                                self.selected_valid_moves = piece.get_valid_moves(clicked_hex, self.board)
-                                self.flag = False
+                            clicked_hex = HexUtils.pixel_to_hex(mouse_pos[0] - self.screen.get_width() / 2,
+                                                                mouse_pos[1] - self.screen.get_height() / 2, 40)
+                            if self.selected_piece:
+                                if clicked_hex in self.selected_valid_moves:
+                                    if self.selected_hex:
+                                        if isinstance(self.selected_piece, Beetle):
+                                            self.board.board[(self.selected_hex.q,
+                                                              self.selected_hex.r)] = self.selected_piece.frozenPiece
+                                            self.selected_piece.move2(self.selected_hex, clicked_hex, self.board,
+                                                                      self.selected_valid_moves)
+                                        else:
+                                            self.board.board[(self.selected_hex.q, self.selected_hex.r)] = None
+                                    self.board.place_piece(clicked_hex, self.selected_piece)
+                                    if isinstance(self.selected_piece, QueenBee):
+                                        if self.current_player == 0:
+                                            self.white_queen_played = True
+                                        else:
+                                            self.black_queen_played = True
+                                    if self.flag:
+                                        self.flag = False
+                                        if self.selected_piece_origin == 'black' and 0 <= self.selected_piece_index < len(
+                                                self.black_pieces):
+                                            self.black_pieces.pop(self.selected_piece_index)
+                                        elif self.selected_piece_origin == 'white' and 0 <= self.selected_piece_index < len(
+                                                self.white_pieces):
+                                            self.white_pieces.pop(self.selected_piece_index)
+                                    self.selected_piece = None
+                                    self.selected_valid_moves = []
+                                    if self.current_player == 0:
+                                        self.white_rounds += 1
+                                    else:
+                                        self.black_rounds += 1
+
+                                    white_queen = self.get_queen_bee(0)
+                                    black_queen = self.get_queen_bee(1)
+                                    if white_queen and self.is_piece_surrounded(white_queen):
+                                        self.show_message_box("Black wins!")
+                                        self.running = False
+                                    elif black_queen and self.is_piece_surrounded(black_queen):
+                                        self.show_message_box("White wins!")
+                                        self.running = False
+
+                                    self.current_player = 1 - self.current_player  # Switch player
+                                else:
+                                    self.selected_piece = None
+                                    self.selected_valid_moves = []
                             else:
-                                self.handle_piece_selection(event.pos)
-                                self.flag = True
-                                if self.selected_piece:
-                                    if not self.check_queen_played():
-                                        if self.selected_piece.name != "Queen Bee":
-                                            self.show_message_box("You must play the Queen Bee by the 4th turn.")
-                                            self.selected_piece = None
+                                piece = self.board.get_piece(clicked_hex)
+                                if piece and piece.color == self.current_player:
+                                    if (self.current_player == 0 and not self.white_queen_played) or (
+                                            self.current_player == 1 and not self.black_queen_played):
+                                        if not isinstance(piece, QueenBee):
+                                            self.show_message_box(
+                                                "You must place the Queen Bee before moving any other piece.")
+                                            continue
+                                    self.selected_hex = clicked_hex
+                                    self.selected_piece = piece
+                                    self.selected_valid_moves = piece.get_valid_moves(clicked_hex, self.board)
+                                    self.flag = False
+                                else:
+                                    self.handle_piece_selection(mouse_pos)
+                                    self.flag = True
+                                    if self.selected_piece:
+                                        if not self.check_queen_played():
+                                            if self.selected_piece.name != "Queen Bee":
+                                                self.show_message_box(
+                                                    "You must play the Queen Bee by the 4th turn.")
+                                                self.selected_piece = None
+                                            else:
+                                                self.selected_valid_moves = self.selected_piece.get_valid_position(
+                                                    self.board)
                                         else:
                                             self.selected_valid_moves = self.selected_piece.get_valid_position(
                                                 self.board)
-                                    else:
-                                        self.selected_valid_moves = self.selected_piece.get_valid_position(self.board)
 
             if self.game_mode == "Player VS Computer" and self.current_player == 1:
                 if not self.black_queen_played and self.black_rounds == 3:
@@ -329,107 +360,9 @@ class GameTable:
             self.screen.fill((255, 235, 215))
             self.draw_board()
             self.highlight_moves(self.selected_valid_moves)
+
+            mouse_pos = pygame.mouse.get_pos()
+            restart_hovered = restart_button.collidepoint(mouse_pos)
+            restart_button = draw_restart_button(self.screen, "Restart", restart_hovered, button_font)
+
             pygame.display.flip()
-
-
-    # def run(self):
-    #     print("Run method started")
-    #     while self.running:
-    #         for event in pygame.event.get():
-    #             if event.type == pygame.QUIT:
-    #                 print("Quit event detected")
-    #                 self.running = False
-    #             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-    #                 print("Escape key pressed")
-    #                 self.running = False
-    #                 return "main_menu"
-    #             elif event.type == pygame.MOUSEBUTTONDOWN:
-    #                 print("Mouse button down event detected")
-    #                 if event.button == 1:
-    #                     clicked_hex = HexUtils.pixel_to_hex(event.pos[0] - self.screen.get_width() / 2,
-    #                                                         event.pos[1] - self.screen.get_height() / 2, 40)
-    #                     print(f"Clicked hex: {clicked_hex}")
-    #                     if self.selected_piece:
-    #                         if clicked_hex in self.selected_valid_moves:
-    #                             if self.selected_hex:
-    #                                 if isinstance(self.selected_piece, Beetle):
-    #                                     self.board.board[
-    #                                         (self.selected_hex.q, self.selected_hex.r)] = self.selected_piece.frozenPiece
-    #                                     self.selected_piece.move2(self.selected_hex, clicked_hex, self.board,
-    #                                                               self.selected_valid_moves)
-    #                                 else:
-    #                                     self.board.board[(self.selected_hex.q, self.selected_hex.r)] = None
-    #                             self.board.place_piece(clicked_hex, self.selected_piece)
-    #                             if isinstance(self.selected_piece, QueenBee):
-    #                                 if self.current_player == 0:
-    #                                     self.white_queen_played = True
-    #                                 else:
-    #                                     self.black_queen_played = True
-    #                             if self.flag:
-    #                                 self.flag = False
-    #                                 if self.selected_piece_origin == 'black' and 0 <= self.selected_piece_index < len(
-    #                                         self.black_pieces):
-    #                                     self.black_pieces.pop(self.selected_piece_index)
-    #                                 elif self.selected_piece_origin == 'white' and 0 <= self.selected_piece_index < len(
-    #                                         self.white_pieces):
-    #                                     self.white_pieces.pop(self.selected_piece_index)
-    #                             self.selected_piece = None
-    #                             self.selected_valid_moves = []
-    #                             if self.current_player == 0:
-    #                                 self.white_rounds += 1
-    #                             else:
-    #                                 self.black_rounds += 1
-    #
-    #                             white_queen = self.get_queen_bee(0)
-    #                             black_queen = self.get_queen_bee(1)
-    #                             if white_queen and self.is_piece_surrounded(white_queen):
-    #                                 self.show_message_box("Black wins!")
-    #                                 self.running = False
-    #                             elif black_queen and self.is_piece_surrounded(black_queen):
-    #                                 self.show_message_box("White wins!")
-    #                                 self.running = False
-    #
-    #                             self.current_player = 1 - self.current_player
-    #                         else:
-    #                             self.selected_piece = None
-    #                             self.selected_valid_moves = []
-    #                     else:
-    #                         piece = self.board.get_piece(clicked_hex)
-    #                         if piece and piece.color == self.current_player:
-    #                             if (self.current_player == 0 and not self.white_queen_played) or (
-    #                                     self.current_player == 1 and not self.black_queen_played):
-    #                                 if not isinstance(piece, QueenBee):
-    #                                     self.show_message_box("You must place the Queen Bee before moving any other piece.")
-    #                                     continue
-    #                             self.selected_hex = clicked_hex
-    #                             self.selected_piece = piece
-    #                             self.selected_valid_moves = piece.get_valid_moves(clicked_hex, self.board)
-    #                             self.flag = False
-    #                         else:
-    #                             self.handle_piece_selection(event.pos)
-    #                             self.flag = True
-    #                             if self.selected_piece:
-    #                                 if not self.check_queen_played():
-    #                                     if self.selected_piece.name != "Queen Bee":
-    #                                         self.show_message_box("You must play the Queen Bee by the 4th turn.")
-    #                                         self.selected_piece = None
-    #                                     else:
-    #                                         self.selected_valid_moves = self.selected_piece.get_valid_position(self.board)
-    #                                 else:
-    #                                     self.selected_valid_moves = self.selected_piece.get_valid_position(self.board)
-    #
-    #         if self.game_mode == "Player VS Computer" and self.current_player == 1:
-    #             if not self.black_queen_played and self.black_rounds == 3:
-    #                 self.selected_piece = self.black_pieces.pop(0)
-    #             else:
-    #                 print("AI making move")
-    #                 self.ai_make_move()
-    #
-    #         self.screen.fill((255, 235, 215))
-    #         self.draw_board()
-    #         self.highlight_moves(self.selected_valid_moves)
-    #         pygame.display.flip()
-    #
-    #         print("Run method loop iteration completed")
-    #
-    #     print("Run method ended")

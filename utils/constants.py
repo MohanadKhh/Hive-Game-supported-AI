@@ -18,3 +18,9 @@ WHITE = (255, 255, 255)
 button_width = 300
 button_height = 60
 button_spacing = 35  # Space between buttons
+
+# Restart Button settings
+restart_button_width = 150
+restart_button_height = 50
+restart_button_x = 20
+restart_button_y = HEIGHT - restart_button_height - 20
