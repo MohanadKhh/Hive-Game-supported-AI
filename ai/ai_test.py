@@ -1,12 +1,14 @@
 import copy
 
-from environment.hive import HexBoard, Hex, HexUtils
-
+from environment.hive import Piece, HexBoard, Hex, HexUtils
+from pieces.Ant import Ant
+from pieces.Beetle import Beetle
+from pieces.QueenBee import QueenBee
+from pieces.Grasshopper import Grasshopper
+from pieces.Spider import Spider
+import random
 
 def evaluate_board(board, player):
-    if not board or not hasattr(board, 'board') or board.board is None:
-        raise ValueError("The board is not properly initialized.")
-
     #   if player is -1 then its black turn,1 is white turn
     from math import sqrt
 
@@ -28,8 +30,8 @@ def evaluate_board(board, player):
                     black_queen_pos = Hex(q, r)
                 elif piece.color == 0:  # White Queen
                     white_queen_pos = Hex(q, r)
-    else:
-        raise ValueError("The board is not properly initialized.")
+    # else:
+    #     raise ValueError("The board is not properly initialized.")
 
     # Get the queen pieces
     black_queen = board.get_piece(black_queen_pos) if black_queen_pos else None
@@ -59,9 +61,13 @@ def evaluate_board(board, player):
                     proximity_score += max(0, 10 - distance)  # Reward closer pieces
 
     # use piece values if queens are not yet used
-    piece_value_score = sum(piece.value for (q, r), piece in board.board.items() if piece is not None)
+    piece_value_score = 0
+    if board and hasattr(board, "board") and board.board:
+        piece_value_score = sum(piece.value for (q, r), piece in board.board.items() if piece is not None)
+    # else
+    #     piece_value_score = 4
 
-    # Calculate the final score
+    #Calculate the final score
     score = 0
     # if white_queen or black_queen:
         # Use mobility and proximity if queens are present
@@ -75,8 +81,7 @@ def evaluate_board(board, player):
     return score
 
 
-
-def get_all_possible_moves(GameTable, board, player):
+def get_all_possible_moves( game_table , board, player):
     """
     Get all possible moves for a given player.
     Args:
@@ -87,9 +92,10 @@ def get_all_possible_moves(GameTable, board, player):
     - list of lists: List[List[CurrentHex, TargetHex, Piece]]
     """
     all_moves = []
-
+    
     if player == -1:  # Black's unplaced pieces
-        unplaced_black_pieces = GameTable.black_pieces
+        print(len(game_table.uncommen_black_pieces))
+        unplaced_black_pieces = random.sample(game_table.uncommen_black_pieces, min(3,len(game_table.uncommen_black_pieces)))
         for piece in unplaced_black_pieces:
             valid_positions = piece.get_valid_position(board)
             for target_hex in valid_positions:
@@ -97,7 +103,7 @@ def get_all_possible_moves(GameTable, board, player):
 
 
     elif player == 1:  # White's unplaced pieces
-        unplaced_white_pieces = GameTable.white_pieces
+        unplaced_white_pieces = game_table.white_pieces
         for piece in unplaced_white_pieces:
             valid_positions = piece.get_valid_position(board)
             for target_hex in valid_positions:
@@ -122,35 +128,7 @@ def get_all_possible_moves(GameTable, board, player):
 
     if not all_moves:
         print("No valid moves for pieces.")
-    return all_moves
-
-def get_all_possible_moves(gameTable, board, player):
-    all_moves = []
-
-    if player == -1:
-        unplaced_black_pieces = gameTable.black_pieces
-        for piece in unplaced_black_pieces:
-            valid_positions = piece.get_valid_position(board)
-            for target_hex in valid_positions:
-                all_moves.append([None, target_hex, piece, "place"])
-
-    elif player == 1:
-        unplaced_white_pieces = gameTable.white_pieces
-        for piece in unplaced_white_pieces:
-            valid_positions = piece.get_valid_position(board)
-            for target_hex in valid_positions:
-                all_moves.append([None, target_hex, piece, "place"])
-
-    if board and hasattr(board, "board") and board.board:
-        for (q, r), piece in board.board.items():
-            if piece is None:
-                continue
-            if piece and ((player == -1 and piece.color == 1) or (player == 1 and piece.color == 0)):
-                current_hex = Hex(q, r)
-                valid_moves = piece.get_valid_moves(current_hex, board)
-                for target_hex in valid_moves:
-                    all_moves.append([current_hex, target_hex, piece, "move"])
-
+    all_moves=random.sample(all_moves, min(20,len(all_moves)))
     return all_moves
 
 
@@ -202,13 +180,13 @@ def game_over(board):
         return False
 
 
-def minmax(board, player, depth, is_maximizing_player):
+def minmax(game_table, board, player, depth, is_maximizing_player):
     if depth == 0 or game_over(board):
         return evaluate_board(board, player)
 
     if is_maximizing_player:  # AI's turn (Black)
         max_eval = float('-inf')
-        for move in get_all_possible_moves(board, player):  # -1 is Black
+        for move in get_all_possible_moves( game_table ,board, player):  # -1 is Black
             new_board = copy.deepcopy(board)
             start_pos, end_pos, piece, action = move
 
@@ -217,12 +195,12 @@ def minmax(board, player, depth, is_maximizing_player):
             if action == "place":
                 new_board = new_board.place_piece(end_pos, piece)
 
-            eval = minmax(new_board, (-1 * player), depth - 1, False)
+            eval = minmax(game_table, new_board, (-1 * player), depth - 1, False)
             max_eval = max(max_eval, eval)
         return max_eval
     else:  # Opponent's turn (White)
         min_eval = float('inf')
-        for move in get_all_possible_moves(board, player):  # 1 is White
+        for move in get_all_possible_moves(game_table,board, player):  # 1 is White
             new_board = copy.deepcopy(board)
             start_pos, end_pos, piece, action = move
 
@@ -231,63 +209,21 @@ def minmax(board, player, depth, is_maximizing_player):
             if action == "place":
                 new_board = new_board.place_piece(end_pos, piece)
 
-            eval = minmax(new_board, (-1 * player), depth - 1, True)
+            eval = minmax(game_table, new_board, (-1 * player), depth - 1, True)
             min_eval = min(min_eval, eval)
         return min_eval
 
 
-# def alpha_beta(board, player, depth, alpha, beta, is_maximizing_player):
-#     """
-#     Minmax function with alpha-beta pruning.
-#     """
-#     if depth == 0 or game_over(board):
-#         return evaluate_board(board, player)
-#
-#     if is_maximizing_player:  # AI's turn (Black)
-#         max_eval = float('-inf')
-#         for move in get_all_possible_moves(board, player):  # -1 is Black
-#             new_board = copy.deepcopy(board)
-#             start_pos, end_pos, piece, action = move
-#
-#             if action == "move":
-#                 new_board = new_board.move(start_pos, end_pos, board, piece.get_valid_moves(start_pos, board))
-#             if action == "place":
-#                 new_board = new_board.place_piece(end_pos, piece)
-#
-#             eval = alpha_beta(new_board, (-1 * player), depth - 1, alpha, beta, False)
-#             max_eval = max(max_eval, eval)
-#             alpha = max(alpha, eval)
-#             if beta <= alpha:  # Prune
-#                 break
-#         return max_eval
-#     else:  # Opponent's turn (White)
-#         min_eval = float('inf')
-#         for move in get_all_possible_moves(board, player):  # 1 is White
-#             new_board = copy.deepcopy(board)
-#             start_pos, end_pos, piece, action = move
-#
-#             if action == "move":
-#                 new_board = new_board.move(start_pos, end_pos, board, piece.get_valid_moves(start_pos, board))
-#             if action == "place":
-#                 new_board = new_board.place_piece(end_pos, piece)
-#
-#             eval = alpha_beta(new_board, (-1 * player), depth - 1, alpha, beta, True)
-#             min_eval = min(min_eval, eval)
-#             beta = min(beta, eval)
-#             if beta <= alpha:  # Prune
-#                 break
-#         return min_eval
-
-def alpha_beta(board, player, depth, alpha, beta, is_maximizing_player):
-    if not board or not hasattr(board, 'board') or board.board is None:
-        raise ValueError("The board is not properly initialized.")
-
+def alpha_beta(game_table, board, player, depth, alpha, beta, is_maximizing_player):
+    """
+    Minmax function with alpha-beta pruning.
+    """
     if depth == 0 or game_over(board):
         return evaluate_board(board, player)
 
     if is_maximizing_player:  # AI's turn (Black)
         max_eval = float('-inf')
-        for move in get_all_possible_moves(board, player):
+        for move in get_all_possible_moves(game_table,board, player):  # -1 is Black
             new_board = copy.deepcopy(board)
             start_pos, end_pos, piece, action = move
 
@@ -296,7 +232,7 @@ def alpha_beta(board, player, depth, alpha, beta, is_maximizing_player):
             if action == "place":
                 new_board = new_board.place_piece(end_pos, piece)
 
-            eval = alpha_beta(new_board, (-1 * player), depth - 1, alpha, beta, False)
+            eval = alpha_beta(game_table, new_board, (-1 * player), depth - 1, alpha, beta, False)
             max_eval = max(max_eval, eval)
             alpha = max(alpha, eval)
             if beta <= alpha:  # Prune
@@ -304,7 +240,7 @@ def alpha_beta(board, player, depth, alpha, beta, is_maximizing_player):
         return max_eval
     else:  # Opponent's turn (White)
         min_eval = float('inf')
-        for move in get_all_possible_moves(board, player):
+        for move in get_all_possible_moves(game_table,board, player):  # 1 is White
             new_board = copy.deepcopy(board)
             start_pos, end_pos, piece, action = move
 
@@ -313,7 +249,7 @@ def alpha_beta(board, player, depth, alpha, beta, is_maximizing_player):
             if action == "place":
                 new_board = new_board.place_piece(end_pos, piece)
 
-            eval = alpha_beta(new_board, (-1 * player), depth - 1, alpha, beta, True)
+            eval = alpha_beta(game_table,new_board, (-1 * player), depth - 1, alpha, beta, True)
             min_eval = min(min_eval, eval)
             beta = min(beta, eval)
             if beta <= alpha:  # Prune
@@ -321,70 +257,18 @@ def alpha_beta(board, player, depth, alpha, beta, is_maximizing_player):
         return min_eval
 
 
-
-# def alpha_beta_iterative_deepening(board, player, max_depth, time_limit=5):
-#     import time
-#     """
-#     Args:
-#         board: The game board state.
-#         player: The player (-1 for AI, 1 for opponent).
-#         max_depth: The maximum depth to search.
-#         time_limit: Time limit in seconds for the iterative deepening.
-#
-#     Returns:
-#         A tuple containing the best move and its value.
-#     """
-#     alpha = float('-inf')
-#     beta = float('inf')
-#     best_move = None
-#     best_value = float('-inf')
-#     start_time = time.time()
-#
-#     for depth in range(1, max_depth + 1):
-#         print(f"Searching at depth {depth}...")
-#         current_best_move = None
-#         current_best_value = float('-inf')
-#
-#         for move in get_all_possible_moves(board, player):
-#             new_board = copy.deepcopy(board)
-#             start_pos, end_pos, piece, action = move
-#
-#             if action == "move":
-#                 new_board = new_board.move(start_pos, end_pos, board, piece.get_valid_moves(start_pos, board))
-#             if action == "place":
-#                 new_board = new_board.place_piece(end_pos, piece)
-#
-#             move_value = alpha_beta(new_board, (-1 * player), depth - 1, alpha, beta, False)
-#
-#             if move_value > current_best_value:
-#                 current_best_value = move_value
-#                 current_best_move = move
-#
-#             alpha = max(alpha, current_best_value) if player == -1 else alpha
-#
-#             # Time check
-#             if time_limit and time.time() - start_time > time_limit:
-#                 print("Time limit reached during depth", depth)
-#                 return best_move
-#
-#         # Update best result
-#         if current_best_move is not None:
-#             best_move = current_best_move
-#             best_value = current_best_value
-#
-#         # Exit if no time left
-#         if time_limit and time.time() - start_time > time_limit:
-#             print("Time limit reached.")
-#             break
-#
-#     return best_move
-
-
-def alpha_beta_iterative_deepening(gameTable, board, player, max_depth, time_limit=5):
-    if not board or not hasattr(board, 'board') or board.board is None:
-        raise ValueError("The board is not properly initialized.")
-
+def alpha_beta_iterative_deepening(game_table, board, player, max_depth, time_limit=5):
     import time
+    """
+    Args:
+        board: The game board state.
+        player: The player (-1 for AI, 1 for opponent).
+        max_depth: The maximum depth to search.
+        time_limit: Time limit in seconds for the iterative deepening.
+
+    Returns:
+        A tuple containing the best move and its value.
+    """
     alpha = float('-inf')
     beta = float('inf')
     best_move = None
@@ -392,10 +276,11 @@ def alpha_beta_iterative_deepening(gameTable, board, player, max_depth, time_lim
     start_time = time.time()
 
     for depth in range(1, max_depth + 1):
+        print(f"Searching at depth {depth}...")
         current_best_move = None
         current_best_value = float('-inf')
 
-        for move in get_all_possible_moves(gameTable, board, player):  # Pass `G` argument
+        for move in get_all_possible_moves(game_table, board, player):
             new_board = copy.deepcopy(board)
             start_pos, end_pos, piece, action = move
 
@@ -403,8 +288,7 @@ def alpha_beta_iterative_deepening(gameTable, board, player, max_depth, time_lim
                 new_board = new_board.move(start_pos, end_pos, board, piece.get_valid_moves(start_pos, board))
             if action == "place":
                 new_board = new_board.place_piece(end_pos, piece)
-
-            move_value = alpha_beta(new_board, (-1 * player), depth - 1, alpha, beta, False)
+            move_value = alpha_beta(game_table, new_board, (-1 * player), depth - 1, alpha, beta, False)
 
             if move_value > current_best_value:
                 current_best_value = move_value
@@ -412,21 +296,25 @@ def alpha_beta_iterative_deepening(gameTable, board, player, max_depth, time_lim
 
             alpha = max(alpha, current_best_value) if player == -1 else alpha
 
-            if time.time() - start_time > time_limit:
+            # Time check
+            if time_limit and time.time() - start_time > time_limit:
+                print("Time limit reached during depth", depth)
                 return best_move
 
+        # Update best result
         if current_best_move is not None:
             best_move = current_best_move
             best_value = current_best_value
 
-        if time.time() - start_time > time_limit:
+        # Exit if no time left
+        if time_limit and time.time() - start_time > time_limit:
+            print("Time limit reached.")
             break
 
     return best_move
 
 
-
-def agent_best_next_move(gameTable, board, depth, player, algorithm="alpha_beta_iterative"):
+def agent_best_next_move(game_table, board, depth, player, algorithm="alpha_beta_iterative"):
     """
     find the best move using one of three algorithms:
     - Minmax
@@ -445,7 +333,7 @@ def agent_best_next_move(gameTable, board, depth, player, algorithm="alpha_beta_
     if algorithm == "minmax":
         best_move = None
         best_value = float('-inf')
-        for move in get_all_possible_moves(gameTable, board, player):
+        for move in get_all_possible_moves(game_table, board, player):
 
             new_board = copy.deepcopy(board)
             start_pos, end_pos, piece, action = move
@@ -455,7 +343,7 @@ def agent_best_next_move(gameTable, board, depth, player, algorithm="alpha_beta_
             if action == "place":
                 new_board = new_board.place_piece(end_pos, piece)
 
-            move_value = minmax(new_board, (-1 * player), depth - 1, False)
+            move_value = minmax(game_table, new_board, (-1 * player), depth - 1, False)
 
             if move_value > best_value:
                 best_value = move_value
@@ -469,7 +357,7 @@ def agent_best_next_move(gameTable, board, depth, player, algorithm="alpha_beta_
         alpha = float('-inf')
         beta = float('inf')
 
-        for move in get_all_possible_moves(board, player):
+        for move in get_all_possible_moves(game_table,board, player):
             new_board = copy.deepcopy(board)
             start_pos, end_pos, piece, action = move
 
@@ -478,7 +366,7 @@ def agent_best_next_move(gameTable, board, depth, player, algorithm="alpha_beta_
             if action == "place":
                 new_board = new_board.place_piece(end_pos, piece)
 
-            move_value = alpha_beta(new_board, (-1 * player), depth - 1, alpha, beta, False)
+            move_value = alpha_beta(game_table, new_board, (-1 * player), depth - 1, alpha, beta, False)
 
             if move_value > best_value:
                 best_value = move_value
@@ -489,7 +377,7 @@ def agent_best_next_move(gameTable, board, depth, player, algorithm="alpha_beta_
         return best_move
 
     elif algorithm == "alpha_beta_iterative":
-        best_move = alpha_beta_iterative_deepening(board, player, max_depth=depth)
+        best_move = alpha_beta_iterative_deepening(game_table, board, player, max_depth=depth)
         return best_move
 
     else:
@@ -501,47 +389,47 @@ Manual testing
 """
 # def main():
 #     board = HexBoard(10)
-#     # start_pos = Hex(-100, -100)
-#     # end_pos = Hex(0, 0)
-#     # black_queen = QueenBee(1)  # Black Queen
-#     # board.place_piece(start_pos, black_queen)
-#     # # valid_pos = black_queen.get_valid_position(board)
-#     # # board.move(start_pos, end_pos, board, valid_pos)
-#     # board.display()
-#     # print("hello")
-#     # board = HexBoard(10)
-#     #
-#     # # Initialize pieces with name and color (0 for white, 1 for black)
+# #     # start_pos = Hex(-100, -100)
+# #     # end_pos = Hex(0, 0)
+# #     # black_queen = QueenBee(1)  # Black Queen
+# #     # board.place_piece(start_pos, black_queen)
+# #     # # valid_pos = black_queen.get_valid_position(board)
+# #     # # board.move(start_pos, end_pos, board, valid_pos)
+# #     # board.display()
+# #     # print("hello")
+# #     # board = HexBoard(10)
+# #     #
+# #     # # Initialize pieces with name and color (0 for white, 1 for black)
 #     black_queen = QueenBee(1)  # Black Queen
 #     white_queen = QueenBee(0)  # White Queen
-#     white_beetle = Beetle(0)
-#     white_beetle1 = Beetle(0)
+# #     white_beetle = Beetle(0)
+# #     white_beetle1 = Beetle(0)
 #     black_beetle = Beetle(1)  # Black Beetle
 #     white_hopper = Grasshopper(0)  # White Hopper
-#     white_spider = Spider(0)
-#     white_spider1 = Spider(0)
-#     black_hopper = Grasshopper(1)
-#     # # black_hopper1 = Grasshopper(1)
-#     # # black_spider = Spider(1)
-#     black_ant = Ant(1)
+# #     white_spider = Spider(0)
+# #     white_spider1 = Spider(0)
+# #     black_hopper = Grasshopper(1)
+# #     # # black_hopper1 = Grasshopper(1)
+# #     # # black_spider = Spider(1)
+# #     black_ant = Ant(1)
 #     a = Hex(0,0)
 #     b = Hex(0,1)
 #     c = Hex(0, -1)
-#     d = Hex(-1,1)
+# #     d = Hex(-1,1)
 #     e = Hex(0, -2)
-#     f = Hex(0, -3)
+# #     f = Hex(0, -3)
 #     g = Hex(0,2)
-#     h = Hex(-1, 2)
-#     i = Hex(0, -4)
-#     j = Hex(-2, 2)
-#     k = Hex(0, -5)
-#     # # Place pieces on the board
-#     board.place_piece(a, white_beetle)
-#     board.place_piece(b, black_queen)
-#     board.place_piece(c, white_hopper)
-#     board.place_piece(g, black_beetle)
-#     board.place_piece(e, white_spider)
-#     board.place_piece(f, white_queen)
+# #     h = Hex(-1, 2)
+# #     i = Hex(0, -4)
+# #     j = Hex(-2, 2)
+# #     k = Hex(0, -5)
+# #     # # Place pieces on the board
+# #     board.place_piece(a, white_beetle)
+#     board.place_piece(a, black_queen)
+#     board.place_piece(g, white_hopper)
+#     board.place_piece(c, black_beetle)
+# #     board.place_piece(e, white_spider)
+#     board.place_piece(b, white_queen)
 #     board.place_piece(h, black_ant)
 #     board.place_piece(i, white_spider1)
 #     board.place_piece(j, black_hopper)

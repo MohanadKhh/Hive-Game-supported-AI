@@ -6,9 +6,11 @@ from pieces.Grasshopper import Grasshopper
 from pieces.Beetle import Beetle
 from pieces.Spider import Spider
 from pieces.Ant import Ant
-from ai.ai_test import alpha_beta_iterative_deepening
 from utils.draw_button import draw_button, draw_restart_button
 from utils.constants import *
+from ai.ai_test import agent_best_next_move, alpha_beta_iterative_deepening  # Import AI functions
+from collections import Counter
+
 
 
 
@@ -30,8 +32,20 @@ class GameTable:
         self.black_queen_played = False
         self.show_queen_warning = False
         self.flag = False
+        self.uncommen_black_pieces = []
+        self.uncommen_white_pieces = []
         self.load_images()  # Load images here
 
+    def load_images(self):
+        self.images = {
+            "Queen Bee": pygame.image.load("assets/Bee.png"),
+            "Ant": pygame.image.load("assets/Ant.png"),
+            "Beetle": pygame.image.load("assets/Beetle.png"),
+            "Grasshopper": pygame.image.load("assets/Grasshopper.png"),
+            "Spider": pygame.image.load("assets/Spider.png")
+        }
+        for key in self.images:
+            self.images[key] = pygame.transform.scale(self.images[key], (40, 40))  # Adjust size if needed
 
     def restart_game(self):
         self.__init__(self.screen, self.game_mode)
@@ -53,16 +67,6 @@ class GameTable:
         ]
         pygame.draw.polygon(self.screen, color, points, 2)
 
-    def load_images(self):
-        self.images = {
-            "Queen Bee": pygame.image.load("assets/Bee.png"),
-            "Ant": pygame.image.load("assets/Ant.png"),
-            "Beetle": pygame.image.load("assets/Beetle.png"),
-            "Grasshopper": pygame.image.load("assets/Grasshopper.png"),
-            "Spider": pygame.image.load("assets/Spider.png")
-        }
-        for key in self.images:
-            self.images[key] = pygame.transform.scale(self.images[key], (40, 40))  # Adjust size if needed
 
     def draw_piece(self, x, y, piece, is_selected=False):
         hex_size = 40  # Use the same size as the hexagon cells
@@ -208,21 +212,30 @@ class GameTable:
 
         pygame.time.wait(2000)  # Show the message for 2 seconds
 
-    # def ai_select_piece_and_place(self):
-    #     # Select a piece from AI's deck (black pieces) if there's no piece selected
-    #     if not self.selected_piece and self.black_pieces:
-    #         self.selected_piece = self.black_pieces.pop(0)
-    #         self.selected_valid_moves = self.selected_piece.get_valid_position(self.board)
-    #
-    #     # If AI has selected a piece, make the best move
-    #     if self.selected_piece and self.selected_valid_moves:
-    #         best_move = self.selected_valid_moves[0]  # Select the first valid move as the best move
-    #         self.board.place_piece(best_move, self.selected_piece)
-    #         if isinstance(self.selected_piece, QueenBee):
-    #             self.black_queen_played = True
-    #         self.selected_piece = None
-    #         self.selected_valid_moves = []
-    #         self.current_player = 1 - self.current_player  # Switch player
+    def ai_select_piece_and_place(self):
+        # Select a piece from AI's deck (black pieces) if there's no piece selected
+        agent = agent_best_next_move(self, self.board, self.ai_depth, -1,
+                                     "alpha_beta_iterative")  # List[CurrentHex, TargetHex, Piece,Action]
+
+        if not self.selected_piece and self.black_pieces:
+            self.selected_piece = agent[2]
+            print('agent[2]\t', agent[2])
+
+            self.selected_valid_moves = self.selected_piece.get_valid_position(self.board)
+
+        # If AI has selected a piece, make the best move
+        if self.selected_piece:
+            best_move = agent[1]
+            print("best_move\t", best_move)  # Select the first valid move as the best move
+            self.board.place_piece(best_move, self.selected_piece)
+            for i, piece in enumerate(self.black_pieces):
+                if isinstance(agent[2], type(piece)):
+                    self.black_pieces.pop(i)
+                    break
+            self.selected_piece = None
+            self.selected_valid_moves = []
+            self.current_player = 1 - self.current_player  # Switch player
+        return agent
 
     def ai_make_move(self):
         depth = self.ai_depth
@@ -352,9 +365,13 @@ class GameTable:
                                                 self.board)
 
             if self.game_mode == "Player VS Computer" and self.current_player == 1:
+                # Count the occurrences of each class type
+                class_counts = Counter(type(piece) for piece in self.black_pieces)
+                self.uncommen_black_pieces = [piece for piece in self.black_pieces if class_counts[type(piece)] >= 1]
                 if not self.black_queen_played and self.black_rounds == 3:
-                    self.selected_piece = self.black_pieces.pop(0)  # Select the queen piece
+                    self.selected_piece = self.black_pieces.pop(0)
                 else:
+                    print("AI making move")
                     self.ai_make_move()
 
             self.screen.fill((255, 235, 215))
