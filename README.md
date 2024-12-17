@@ -13,6 +13,8 @@ Download the project and run the .exe file to start playing right away!
 <placeholder for youtube link>
 
 
+# Project Description and Set up
+
 ## Features
 
 - **Two-Player Mode**: Play the Hive game against another human player.
