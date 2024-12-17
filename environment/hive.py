@@ -239,6 +239,7 @@ class HexBoard:
         if (hex.q, hex.r) in self.board:
             self.board[(hex.q, hex.r)] = piece
             piece.set_position(hex.q, hex.r)  # Set the position of the piece
+            return self
         else:
             raise ValueError("Hex not on the board.")
 
