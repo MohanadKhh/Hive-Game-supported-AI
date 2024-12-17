@@ -135,8 +135,6 @@ class Piece:
                         (q + 1, r),
                         (q + 1, r - 1)
                         ]
-                        print(q,r)
-                        print(neighbors)
                         for neighbor in neighbors:
                             empty_place = board.get_piece(Hex(neighbor[0],neighbor[1])) 
                             if empty_place is None:
@@ -183,7 +181,6 @@ class Piece:
                                         break
                                 if flag:
                                     valid_position.append(Hex(neighbor[0],neighbor[1]))
-        print(valid_position)
         return valid_position
 
                             
@@ -224,7 +221,6 @@ class HexBoard:
                     row += (str(piece) if piece else ".") + " "
                 else:
                     row += "  "  # Empty spaces for alignment
-            print(row)
 
     def create_board(self):
         board = {}

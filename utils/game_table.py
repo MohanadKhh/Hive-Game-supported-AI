@@ -35,6 +35,8 @@ class GameTable:
         self.uncommen_black_pieces = []
         self.uncommen_white_pieces = []
         self.load_images()  # Load images here
+        self.no_white_place=0
+        self.no_black_place=0
 
     def load_images(self):
         self.images = {
@@ -237,15 +239,19 @@ class GameTable:
             self.current_player = 1 - self.current_player  # Switch player
         return agent
 
-    def ai_make_move(self):
+    def ai_make_move(self,Queenmove=False):
         depth = self.ai_depth
-        best_move = alpha_beta_iterative_deepening(self, self.board, -1, depth)  # Pass self as the argument
+        if not Queenmove:
+            best_move = alpha_beta_iterative_deepening(self, self.board, -1, depth)
+        else:  
+            best_move = alpha_beta_iterative_deepening(self, self.board, -1, 1,Queenmove=Queenmove)  # Pass self as the argument
         if best_move:
             start_pos, end_pos, piece, action = best_move
 
             if action == "move":
                 self.board.move(start_pos, end_pos, self.board, piece.get_valid_moves(start_pos, self.board))
             elif action == "place":
+                self.no_black_place+=1
                 self.board.place_piece(end_pos, piece)
                 for i, piece1 in enumerate(self.black_pieces):
                     if isinstance(piece, type(piece1)):
@@ -314,6 +320,7 @@ class GameTable:
                                             self.black_pieces.pop(self.selected_piece_index)
                                         elif self.selected_piece_origin == 'white' and 0 <= self.selected_piece_index < len(
                                                 self.white_pieces):
+                                            self.no_white_place+=1
                                             self.white_pieces.pop(self.selected_piece_index)
                                     self.selected_piece = None
                                     self.selected_valid_moves = []
@@ -368,8 +375,10 @@ class GameTable:
                 # Count the occurrences of each class type
                 class_counts = Counter(type(piece) for piece in self.black_pieces)
                 self.uncommen_black_pieces = [piece for piece in self.black_pieces if class_counts[type(piece)] >= 1]
-                if not self.black_queen_played and self.black_rounds == 3:
-                    self.selected_piece = self.black_pieces.pop(0)
+                self.black_rounds+=1
+                if not self.black_queen_played and self.black_rounds == 4:
+                    print("Queen must place",self.black_rounds)
+                    self.ai_make_move(True)
                 else:
                     print("AI making move")
                     self.ai_make_move()

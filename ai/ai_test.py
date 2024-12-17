@@ -81,7 +81,7 @@ def evaluate_board(board, player):
     return score
 
 
-def get_all_possible_moves( game_table , board, player):
+def get_all_possible_moves( game_table , board, player,Queenmove =False):
     """
     Get all possible moves for a given player.
     Args:
@@ -92,43 +92,52 @@ def get_all_possible_moves( game_table , board, player):
     - list of lists: List[List[CurrentHex, TargetHex, Piece]]
     """
     all_moves = []
-    
-    if player == -1:  # Black's unplaced pieces
-        print(len(game_table.uncommen_black_pieces))
-        unplaced_black_pieces = random.sample(game_table.uncommen_black_pieces, min(3,len(game_table.uncommen_black_pieces)))
-        for piece in unplaced_black_pieces:
-            valid_positions = piece.get_valid_position(board)
+    if not Queenmove:
+        if game_table.no_black_place < game_table.no_white_place:
+            if player == -1:  # Black's unplaced pieces
+                # print(len(game_table.uncommen_black_pieces))
+                unplaced_black_pieces = game_table.uncommen_black_pieces
+                for piece in unplaced_black_pieces:
+                    valid_positions = piece.get_valid_position(board)
+                    for target_hex in valid_positions:
+                        all_moves.append([None, target_hex, piece, "place"])
+
+
+        elif player == 1:  # White's unplaced pieces
+            unplaced_white_pieces = game_table.white_pieces
+            for piece in unplaced_white_pieces:
+                valid_positions = piece.get_valid_position(board)
+                for target_hex in valid_positions:
+                    all_moves.append([None, target_hex, piece, "place"])
+                    
+        # for piece in unplaced_pieces:
+        #     valid_positions = piece.get_valid_position(board)
+        #     for target_hex in valid_positions:
+        #         all_moves.append([None, target_hex, piece, "place"])
+
+
+        if board and hasattr(board, "board") and board.board:
+            for (q, r), piece in board.board.items():
+                if piece is None:  # Skip this iteration if the piece is None
+                    continue
+                if piece and ((player == -1 and piece.color == 1) or (player == 1 and piece.color == 0)):
+                    current_hex = Hex(q, r)
+                    valid_moves = piece.get_valid_moves(current_hex, board)
+                    for target_hex in valid_moves:
+                        all_moves.append([current_hex, target_hex, piece, "move"])
+    else:
+        if player == -1:  # Black's unplaced pieces
+            unplaced_black_pieces = game_table.black_pieces.pop(0)
+            print(unplaced_black_pieces)
+            valid_positions = unplaced_black_pieces.get_valid_position(board)
             for target_hex in valid_positions:
-                all_moves.append([None, target_hex, piece, "place"])
+                all_moves.append([None, target_hex, unplaced_black_pieces, "place"])
 
 
-    elif player == 1:  # White's unplaced pieces
-        unplaced_white_pieces = game_table.white_pieces
-        for piece in unplaced_white_pieces:
-            valid_positions = piece.get_valid_position(board)
-            for target_hex in valid_positions:
-                all_moves.append([None, target_hex, piece, "place"])
-
-
-    # for piece in unplaced_pieces:
-    #     valid_positions = piece.get_valid_position(board)
-    #     for target_hex in valid_positions:
-    #         all_moves.append([None, target_hex, piece, "place"])
-
-
-    if board and hasattr(board, "board") and board.board:
-        for (q, r), piece in board.board.items():
-            if piece is None:  # Skip this iteration if the piece is None
-                continue
-            if piece and ((player == -1 and piece.color == 1) or (player == 1 and piece.color == 0)):
-                current_hex = Hex(q, r)
-                valid_moves = piece.get_valid_moves(current_hex, board)
-                for target_hex in valid_moves:
-                    all_moves.append([current_hex, target_hex, piece, "move"])
 
     if not all_moves:
         print("No valid moves for pieces.")
-    all_moves=random.sample(all_moves, min(20,len(all_moves)))
+    all_moves=random.sample(all_moves, min(30,len(all_moves)))
     return all_moves
 
 
@@ -257,7 +266,7 @@ def alpha_beta(game_table, board, player, depth, alpha, beta, is_maximizing_play
         return min_eval
 
 
-def alpha_beta_iterative_deepening(game_table, board, player, max_depth, time_limit=5):
+def alpha_beta_iterative_deepening(game_table, board, player, max_depth, time_limit=5,Queenmove=False):
     import time
     """
     Args:
@@ -280,7 +289,7 @@ def alpha_beta_iterative_deepening(game_table, board, player, max_depth, time_li
         current_best_move = None
         current_best_value = float('-inf')
 
-        for move in get_all_possible_moves(game_table, board, player):
+        for move in get_all_possible_moves(game_table, board, player,Queenmove):
             new_board = copy.deepcopy(board)
             start_pos, end_pos, piece, action = move
 
