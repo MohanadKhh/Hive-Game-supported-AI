@@ -8,9 +8,10 @@ This project is a Python-based implementation of the Hive board game, enhanced w
 
 Download the project and run the .exe file to start playing right away!
 
-## Youtube Demo for the Game
+## YouTube Demo for the Game
 
-<placeholder https://youtu.be/oBp7ZaK3pZ8?si=xhEgx5IT7WanzeiM>
+[Watch the Demo on YouTube](https://youtu.be/oBp7ZaK3pZ8?si=xhEgx5IT7WanzeiM)
+
 
 
 # Project Description and Set up
