@@ -10,7 +10,7 @@ Download the project and run the .exe file to start playing right away!
 
 ## Youtube Demo for the Game
 
-<placeholder for youtube link>
+<placeholder https://youtu.be/oBp7ZaK3pZ8?si=xhEgx5IT7WanzeiM>
 
 
 # Project Description and Set up
