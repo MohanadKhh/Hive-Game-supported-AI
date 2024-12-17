@@ -42,7 +42,7 @@ pip install pygame
 
    - The game window will open, displaying the Hive board.
    - Follow on-screen instructions to place and move pieces.
-   - Choose to play against another player or the AI.
+   - Choose to play against another player or the Computer(supported AI).
 
 ## Command Line Steps to Run
 
