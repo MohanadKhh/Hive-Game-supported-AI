@@ -1,3 +1,5 @@
+
+
 # Hive Game with AI Support
 
 This project is a Python-based implementation of the Hive board game, enhanced with AI capabilities. It allows two players to compete against each other or against an AI opponent.
@@ -66,5 +68,9 @@ pip install pygame
    python main.py
    ```
 
+You Can actually download the .exe file and start playing!
 Enjoy playing the Hive game with AI support!
+
+Youtube Video Demo:
+<placeholder for the link>
 
